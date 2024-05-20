@@ -36,6 +36,7 @@
     ]
   },
   "devDependencies": {
+    "react-datepicker": "^6.9.0",
     "styled-components": "^6.1.11"
   }
 }
