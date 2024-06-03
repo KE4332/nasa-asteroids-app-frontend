@@ -11,17 +11,6 @@ const SpaceObj = styled.span`
     `} ${(props) => props.duration}s infinite;
 `
 
-const SkyObj = styled.span`
-    font-size: 2.5em;
-    position: absolute;
-    left: ${(props) => props.left}%;
-    top: ${(props) => props.top}%;
-    rotate: -10deg;
-    animation: ${keyframes`
-        50% {transform: translateY(${20*Math.random()}px) rotate(20deg);}
-    `} ${(props) => props.duration}s infinite;
-`
-
 function SpaceObjects() {
 
     const emojis_top = [...'🌌🪐🌠🛸🪐🌕👾🌜🌟🚀'];
