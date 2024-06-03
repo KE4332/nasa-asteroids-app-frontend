@@ -1,13 +1,17 @@
 import styled from 'styled-components';
-
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-import { useState } from 'react';
+import TableResults from './TableResults';
+import SpaceObjects from './SpaceObjects';
+import SkyObjects from './SkyObjects';
+
+// import {min, max, floor, ceil, abs} from Math;
 
 const Page = styled.div`
   text-align: center;
-  background-color: #282c34;
+  background: linear-gradient(180deg, rgba(4,32,89,1) 23%, rgba(66,85,187,1) 66%, rgba(0,175,170,1) 90%);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -26,72 +30,96 @@ const DateInput = styled.div`
   gap: 10px;
 `
 
-const QueryArray = styled.table`
-  table-layout: fixed;
-  width: 70%;
-  border-collapse: collapse;
-  border: 3px solid purple;
-`
-
-const QueryCaption = styled.caption`
-  font-weight: bold;
-  font-size: 129.5%;
-  margin-bottom: 10px;
+const PageSpan = styled.span`
+  margin: 5px;
+  color: blue;
   text-decoration: underline;
 `
 
-const TableTh = styled.th`
-  border: 3px solid purple;
-  padding: 6px;
-`
-const TableTd = styled.td`
-  border: 3px solid purple;
-  padding: 20px;
-`
+function clamp(a, x, b) {
+  return Math.max(a, Math.min(x, b));
+}
 
+function nb_weeks_btween(startDate, endDate) {
 
+  const startDate_timestamp = startDate.getTime();
+  const endDate_timestamp = endDate.getTime();
+
+  const diff = Math.abs(endDate_timestamp - startDate_timestamp);
+  const oneDay = 1000 * 60 * 60 * 24;
+
+  const nb_days = Math.floor(diff / oneDay);
+  const nb_pages = Math.floor(nb_days / 7) + 1;
+
+  return nb_pages;
+}
+
+function getInterDates(currentPage, startDate, endDate) {
+
+  const OneDay = 24 * 60 * 60 * 1000;
+
+  const start_timestamp = startDate.getTime()
+  const end_timestamp = endDate.getTime()
+
+  const real_startDate = new Date(Math.min(start_timestamp, end_timestamp))
+  const real_endDate = new Date(Math.max(start_timestamp, end_timestamp))
+
+  const start_interDate = new Date(real_startDate.getTime() + (currentPage-1) * 7 * OneDay);
+  const end_interDate = new Date(Math.min(real_startDate.getTime() + (currentPage * 7 - 1) * OneDay, real_endDate.getTime()));
+
+  return [start_interDate, end_interDate];
+}
+
+const PageNav = (nb_pages, currentPage, setPage) => (
+  <PageSpan>
+      See more results (1-{nb_pages})
+      <input type="number" id="page" name="page"
+      style={{'width': '50px', 'margin': '5px'}}
+      defaultValue={clamp(1, currentPage, nb_pages)} min={1} max={nb_pages}
+      onChange={() => setPage(document.getElementById("page").value)}
+      />
+  </PageSpan>
+)
 
 function App() {
 
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
 
-  return (
+  const [currentPage, setPage] = useState(1);
 
-    <Page>
-      <h1>Nasa Neo Asteroïds</h1>
-      <DateInputsForm>
-        <DateInput>
-          <span>Start Date</span>
-          <DatePicker showIcon selected={startDate} onChange={(date) => setStartDate(date)} />
-        </DateInput>
-        <DateInput>
-          <span>End Date</span>
-          <DatePicker showIcon selected={endDate} onChange={(date) => setEndDate(date)} />
-        </DateInput>
-      </DateInputsForm>
-      <QueryArray>
-        <QueryCaption>
-          Query Results
-        </QueryCaption>
-        <thead>
-          <tr>
-            <TableTh scope="col">Date</TableTh>
-            <TableTh scope="col">Name</TableTh>
-            <TableTh scope="col">Mass (kg)</TableTh>
-            <TableTh scope="col">Distance (km)</TableTh>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <TableTd>1</TableTd>
-            <TableTd>1</TableTd>
-            <TableTd>1</TableTd>
-            <TableTd>1</TableTd>
-          </tr>
-        </tbody>
-      </QueryArray>
-    </Page>
+  const nb_pages = nb_weeks_btween(startDate, endDate);
+  const [start_interDate, end_interDate] = getInterDates(clamp(1, currentPage, nb_pages), startDate, endDate);
+
+  const date_format = "yyyy/MM/dd";
+
+  let container = useRef(null);
+  let [page_height, setpageHeight] = useState(null);
+  useLayoutEffect(() => setpageHeight(container.current.offsetHeight), [])
+
+  console.log(page_height)
+
+  return (
+      <Page ref={container}>
+        <h1>Nasa Neo Asteroïds🪐</h1>
+        <p>Simple application to query data about asteroïds passing near earth between two dates</p>
+        <DateInputsForm>
+          <DateInput>
+            <span>Start Date</span>
+            <DatePicker showIcon dateFormat={date_format} selected={startDate} onChange={(date) => setStartDate(date)} />
+          </DateInput>
+          <DateInput>
+            <span>End Date</span>
+            <DatePicker showIcon dateFormat={date_format} selected={endDate} onChange={(date) => setEndDate(date)} />
+          </DateInput>
+        </DateInputsForm>
+        <SpaceObjects />
+        {nb_pages > 1 ? (
+          PageNav(nb_pages, clamp(1, currentPage, nb_pages), setPage)
+        ) : null }
+        <TableResults startDate={start_interDate} endDate={end_interDate}/>
+        <SkyObjects />
+      </Page>
   );
 }
 
