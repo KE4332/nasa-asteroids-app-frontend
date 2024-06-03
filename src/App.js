@@ -7,8 +7,6 @@ import TableResults from './TableResults';
 import SpaceObjects from './SpaceObjects';
 import SkyObjects from './SkyObjects';
 
-// import {min, max, floor, ceil, abs} from Math;
-
 const Page = styled.div`
   text-align: center;
   background: linear-gradient(180deg, rgba(4,32,89,1) 23%, rgba(66,85,187,1) 66%, rgba(0,175,170,1) 90%);
